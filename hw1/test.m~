@@ -1,53 +1,42 @@
-%% test
+%% tests
+
+%% E2A
+test1_e2a = RTmatrices.Rx(pi/2)*RTmatrices.Ry(pi/4)*RTmatrices.Rx(pi/2);
+Q1 = radtodeg(E2A(test1_e2a))
+
+test2_e2a = RTmatrices.Rx(pi/4)*RTmatrices.Ry(pi/2)*RTmatrices.Rx(pi);
+Q2 = radtodeg(E2A(test2_e2a))
+
+test3_e2a = RTmatrices.Rx(pi/4)*RTmatrices.Ry(pi)*RTmatrices.Rx(pi);
+Q3 = radtodeg(E2A(test3_e2a))
+
+test4_e2a = RTmatrices.Rx(pi/4)*RTmatrices.Ry(-pi)*RTmatrices.Rx(pi);
+Q4 = radtodeg(E2A(test4_e2a))
+
+test5_e2a = RTmatrices.Rx(pi/6)*RTmatrices.Ry(-pi/2)*RTmatrices.Rx(pi);
+Q5 = radtodeg(E2A(test5_e2a))
+
+%% FK - IK
 q1 = pi/2; q2 = pi/2; q3 = pi/2; q4 = pi/2; q5 = pi/4; q6 = pi/2;
+fk = FK(q1, q2, q3, q4, q5, q6);
+ik1 = radtodeg(IK(fk));
 
-test1_e2a = Rx(pi/2)*Ry(pi/4)*Rx(pi/2)
-Q1 = E2A(test1_e2a)
+q1 = pi/4; q2 = pi/6; q3 = -pi/3; q4 = pi/2; q5 = -pi/4; q6 = -2*pi;
+fk = FK(q1, q2, q3, q4, q5, q6);
+ik2 = radtodeg(IK(fk));
 
-test2_e2a = Rx(pi/4)*Ry(pi/2)*Rx(pi)
-Q2 = E2
+q1 = -pi/4; q2 = pi/6; q3 = pi/3; q4 = pi/2; q5 = -pi/4; q6 = -2*pi;
+fk = FK(q1, q2, q3, q4, q5, q6);
+ik3 = radtodeg(IK(fk));
 
+q1 = 3*pi/4; q2 = pi/6; q3 = pi/3; q4 = pi/2; q5 = -pi/4; q6 = -2*pi;
+fk = FK(q1, q2, q3, q4, q5, q6);
+ik4 = radtodeg(IK(fk));
 
+q1 = pi/4; q2 = -pi/6; q3 = pi/3; q4 = pi/2; q5 = -pi/4; q6 = -2*pi;
+fk = FK(q1, q2, q3, q4, q5, q6);
+ik5 = radtodeg(IK(fk));
 
-%defining rotation and translation matrices
-function rx = Rx(q)
-rx = [1 0      0       0;
-      0 cos(q) -sin(q) 0;
-      0 sin(q) cos(q)  0; 
-      0 0      0       1];
-end
-
-function ry = Ry(q)
-ry = [cos(q)    0 sin(q) 0; 
-      0         1 0      0;
-      -1*sin(q) 0 cos(q) 0;
-      0         0 0      1];
-end
-
-function rz = Rz(q)
-rz = [cos(q) -1*sin(q) 0 0;
-      sin(q) cos(q)    0 0;
-      0      0         1 0;
-      0      0         0 1];
-end
-
-function tx = Tx(l)
-tx = [1 0 0 l; 
-      0 1 0 0; 
-      0 0 1 0; 
-      0 0 0 1];
-end
-
-function ty = Ty(l)
-ty = [1 0 0 0;
-      0 1 0 l;
-      0 0 1 0;
-      0 0 0 1];
-end
-
-function tz = Tz(l)
-tz = [1 0 0 0;
-      0 1 0 0;
-      0 0 1 l;
-      0 0 0 1];
-end
+q1 = pi/4; q2 = pi/2; q3 = pi/3; q4 = pi/2; q5 = -pi/4; q6 = -2*pi;
+fk = FK(q1, q2, q3, q4, q5, q6);
+ik6 = radtodeg(IK(fk));
