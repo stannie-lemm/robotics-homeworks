@@ -11,12 +11,12 @@ classdef RTmatrices
        function ry = Ry(q)
         ry = [cos(q)    0 sin(q) 0; 
               0         1 0      0;
-              -1*sin(q) 0 cos(q) 0;
+              -sin(q) 0 cos(q) 0;
               0         0 0      1];
        end
 
         function rz = Rz(q)
-        rz = [cos(q) -1*sin(q) 0 0;
+        rz = [cos(q) -sin(q) 0 0;
               sin(q) cos(q)    0 0;
               0      0         1 0;
               0      0         0 1];

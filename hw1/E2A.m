@@ -4,20 +4,20 @@ function euler2angles = E2A(T456)
 % singular case 1
 if T456(1, 1) == 1
     q46 = atan2(T456(2, 3), T456(2, 2));
-    q4 = q46/2;
+    q4 = q46;
     q5_1 = 0;
     q5_2 = 2*pi;
-    q6 = q46/2;
+    q6 = 0;
     
     euler2angles = [q4, q5_1, q6; q4, q5_2, q6];
 
 % singular case 2
 elseif T456(1, 1) == -1
     q46 = atan2(T456(2, 3), T456(2, 2));
-    q4 = q46 + pi/10;
+    q4 = q46;
     q5_1 = -pi;
     q5_2 = pi;
-    q6 = pi/10;
+    q6 = 0;
     
     euler2angles = [q4, q5_1, q6; q4, q5_2, q6];
     
