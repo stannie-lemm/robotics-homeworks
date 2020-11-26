@@ -1,5 +1,5 @@
 %defining rotation and translation matrices
-classdef RTmatrices
+classdef RT
    methods (Static)
       function rx = Rx(q)
 rx = [1 0      0       0;

@@ -1,0 +1,18 @@
+%% tests for mid
+
+clc
+%% ZXZ
+test1_e2a = RTmatrices.Rz(pi/2)*RTmatrices.Rx(pi/4)*RTmatrices.Rz(pi/2);
+Q1 = radtodeg(ZXZ(test1_e2a))
+
+test2_e2a = RTmatrices.Rz(pi/4)*RTmatrices.Rx(pi/2)*RTmatrices.Rz(pi);
+Q2 = radtodeg(ZXZ(test2_e2a))
+
+test3_e2a = RTmatrices.Rx(pi/4)*RTmatrices.Ry(pi)*RTmatrices.Rx(pi);
+Q3 = radtodeg(E2A(test3_e2a));
+
+test4_e2a = RTmatrices.Rx(pi/4)*RTmatrices.Ry(-pi)*RTmatrices.Rx(pi);
+Q4 = radtodeg(E2A(test4_e2a));
+
+test5_e2a = RTmatrices.Rx(pi/6)*RTmatrices.Ry(-pi/2)*RTmatrices.Rx(pi);
+Q5 = radtodeg(E2A(test5_e2a));

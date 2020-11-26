@@ -1,0 +1,73 @@
+<robot name="visual">
+
+    <material name="white">
+    <color rgba="1 1 1 1"/>
+  </material>
+
+  <link name="base_link">
+      <visual>
+          <geometry>
+            <mesh filename="package://my_robot/mesh/base.3ds"/>
+          </geometry>
+          <material name="white"/>
+          <origin rpy="0 0 0" xyz="0 0 0"/>
+      </visual>
+  </link>
+
+  <link name="link1">
+    <visual>
+          <geometry>
+            <mesh filename="package://my_robot/mesh/link1.3ds"/>
+          </geometry>
+          <material name="white"/>
+          <origin rpy="0 0 0" xyz="0 0 -0.5"/>
+      </visual>
+  </link>
+
+  <link name="link2">
+    <visual>
+          <geometry>
+            <mesh filename="package://my_robot/mesh/link2.3ds"/>
+          </geometry>
+          <origin rpy="0 0 0" xyz="0 -0.6 -1.7"/>
+          <material name="white"/>
+      </visual>
+  </link>
+
+<link name="lamp">
+    <visual>
+      <origin rpy="0 0 0" xyz="0 0.35 -2.4"/>
+      <geometry>
+        <mesh filename="package://my_robot/mesh/lamphead.3ds"/>
+      </geometry>
+      <material name="white"/>
+    </visual>
+  </link>
+
+
+  <joint name="joint1" type="revolute">
+    <parent link="base_link"/>
+    <child link="link1"/>
+    <axis xyz="0 0 1"/>
+    <origin xyz="0 0 0.55"/>
+    <limit effort="1000.0" lower="-3.14" upper="3.14" velocity="0.5"/>
+  </joint>
+
+  <joint name="joint2" type="revolute">
+    <parent link="link1"/>
+    <child link="link2"/>
+    <axis xyz="1 0 0"/>
+    <origin xyz="0 0.6 1.25"/>
+    <limit effort="1000.0" lower="-3.14" upper="3.14" velocity="0.5"/>
+  </joint>
+
+<joint name="joint3" type="revolute">
+    <parent link="link2"/>
+    <child link="lamp"/>
+    <axis xyz="1 0 0"/>
+    <origin xyz="0 -1.05 0.75"/>
+    <limit effort="1000.0" lower="-3.14" upper="3.14" velocity="0.5"/>
+  </joint>
+
+
+</robot>
