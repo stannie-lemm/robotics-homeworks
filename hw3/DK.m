@@ -96,4 +96,14 @@ disp(simplify(Jq1 - Jq2));
 
 %% Kinematic Singularity analysis
 
-s = svd(vpa(Jq1))
+% singular_values = svd(vpa(Jq1))
+det0 = simplify(det(Jq1))
+J11 = Jq1(1:3,1:3);
+det1 = simplify(det(J11)) % arm singularities
+J22 = Jq2(4:6,4:6);
+det2 = simplify(det(J22)) % wrist singularities
+
+sol1 = solve(det2 == 0)
+disp(sol1)
+sol2 = solve(det1 == 0, q2, q3, q4, q5)
+disp(sol2)
