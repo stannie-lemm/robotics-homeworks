@@ -5,28 +5,408 @@ syms q1 q2 q3 real
 global l1 l2 l3
 l1 = 1; l2 = 1; l3 = 1;
 
+%% Command 1 - polynomial, 4 constraints
+q0 = [0.5, -0.6, 0];
+qf = [1.57, 0.5, -2.0];
+v0 = 0; vf = 0;
+a0 = 0; af=0;
+t_1_0 = 0; t_1_f = 2;
+ 
+t_1 = (t_1_0:0.1:t_1_f);
+
+A = [1 t_1_0 t_1_0^2 t_1_0^3;
+     0 1 2*t_1_0 3*t_1_0^2;
+     1 t_1_f t_1_f^2 t_1_f^3;
+     0 1 2*t_1_f 3*t_1_f^2];
+  
+a_1 = inv(A)*[q0(1); v0; qf(1); vf];
+a_2 = inv(A)*[q0(2); v0; qf(2); vf];
+a_3 = inv(A)*[q0(3); v0; qf(3); vf];
+
+q_t_1 = a_1(1) + a_1(2)*t_1 + a_1(3)*t_1.*t_1 + a_1(4)*t_1.*t_1.*t_1;
+q_t_2 = a_2(1) + a_2(2)*t_1 + a_2(3)*t_1.*t_1 + a_2(4)*t_1.*t_1.*t_1;
+q_t_3 = a_3(1) + a_3(2)*t_1 + a_3(3)*t_1.*t_1 + a_3(4)*t_1.*t_1.*t_1;
+
+v_t_1 = a_1(2) + a_1(3)*2*t_1 + a_1(4)*3*t_1.*t_1;
+v_t_2 = a_2(2) + a_2(3)*2*t_1 + a_2(4)*3*t_1.*t_1;
+v_t_3 = a_3(2) + a_3(3)*2*t_1 + a_3(4)*3*t_1.*t_1;
+
+a_t_1 = a_1(3)*2 + a_1(4)*6*t_1;
+a_t_2 = a_2(3)*2 + a_2(4)*6*t_1;
+a_t_3 = a_3(3)*2 + a_3(4)*6*t_1;
+
+% figure(1)
+% plot(t_1, q_t_1, 'r'); xlabel('time, s'); ylabel('position, degrees');
+% hold on
+% plot(t_1, q_t_2, 'g');
+% plot(t_1, q_t_3, 'b');
+% legend('q_1', 'q_2', 'q_3')
+% hold off
+% 
+% figure(2)
+% plot(t_1, v_t_1, 'r'); xlabel('time, s'); ylabel('velocity, degrees/s');
+% hold on
+% plot(t_1, v_t_2, 'g');
+% plot(t_1, v_t_3, 'b');
+% legend('q_1', 'q_2', 'q_3')
+% hold off
+% 
+% figure(3)
+% plot(t_1, a_t_1, 'r'); xlabel('time, s'); ylabel('accelerations, degrees/s^2');
+% hold on
+% plot(t_1, a_t_2, 'g');
+% plot(t_1, a_t_3, 'b');
+% legend('q_1', 'q_2', 'q_3')
+% hold off
+
+
+%% Command 2 - PTP, trapezoidal
+q0_2 = [0, 0, 0];
+qf_2 = [-0.9, -2.3, 1.2];
+
+max_vel = 1; max_acc = 10; freq = 10;
+
+% 1st joint
+trpz_q1 = TRPZ_ANG(q0_2(1), qf_2(1), max_vel, max_acc, freq);
+trpz_q2 = TRPZ_ANG(q0_2(2), qf_2(2), max_vel, max_acc, freq);
+trpz_q3 = TRPZ_ANG(q0_2(3), qf_2(3), max_vel, max_acc, freq);
+
+max_time = max(trpz_q1(4), max(trpz_q2(4), trpz_q3(4)))
+timeline = (0:1/freq:max_time);
+t1 = max(trpz_q1(2), max(trpz_q2(2), trpz_q3(2)));
+t2 = max_time - t1;
+
+vel_x_norm = abs(q0_2(1) - qf_2(1))/(max_time - t1);
+vel_y_norm = abs(q0_2(2) - qf_2(2))/(max_time - t1);
+vel_z_norm = abs(q0_2(3) - qf_2(3))/(max_time - t1);
+acc_x_norm = vel_x_norm/t1;
+acc_y_norm = vel_y_norm/t1;
+acc_z_norm = vel_z_norm/t1;
+
+trj_x = zeros(size(timeline));
+vel_x = zeros(size(timeline));
+acc_x = zeros(size(timeline));
+trj_y = zeros(size(timeline));
+vel_y = zeros(size(timeline));
+acc_y = zeros(size(timeline));
+trj_z = zeros(size(timeline));
+vel_z = zeros(size(timeline));
+acc_z = zeros(size(timeline));
+
+
+positions_q1 = zeros(size(timeline));
+velocities_q1 = zeros(size(timeline));
+accelerations_q1 = zeros(size(timeline));
+ 
+for i = (1:1:size(timeline, 2))
+    if timeline(i) < t1
+        trj_x(i) = acc_x_norm*timeline(i)^2*0.5;
+        vel_x(i) = acc_x_norm*timeline(i);
+        acc_x(i) = acc_x_norm;
+    end
+    
+    if (timeline(i) < t2 && timeline(i) >= t1)
+        trj_x(i) = vel_x_norm*(timeline(i) - t1) + t1^2*acc_x_norm*0.5;
+        vel_x(i) = vel_x_norm;
+        acc_x(i) = 0;
+    end
+    
+    if timeline(i) >= t2
+        trj_x(i) = acc_x_norm*0.5*(timeline(i) - t2)^2 + vel_x_norm*(t2 - t1) + t1^2*acc_x_norm*0.5;
+        vel_x(i) = vel_x_norm -acc_x_norm*(timeline(i) - t2); 
+        acc_x(i) = -acc_x_norm;
+    end
+
+    
+    if timeline(i) < t1
+        trj_y(i) = acc_y_norm*timeline(i)^2*0.5;
+        vel_y(i) = acc_y_norm*timeline(i);
+        acc_y(i) = acc_y_norm;
+    end
+   
+    if (timeline(i) < t2 && timeline(i) >= t1)
+        trj_y(i) = vel_y_norm*(timeline(i) - t1) + t1^2*acc_y_norm*0.5;
+        vel_y(i) = vel_y_norm;
+        acc_y(i) = 0;
+    end
+    
+    if timeline(i) >= t2
+        trj_y(i) = acc_y_norm*0.5*(timeline(i) - t2)^2 + vel_y_norm*(t2 - t1) + t1^2*acc_y_norm*0.5;
+        vel_y(i) = vel_y_norm - acc_y_norm*(timeline(i) - t2); 
+        acc_y(i) = -acc_y_norm;
+    end
+    
+    if timeline(i) < t1
+        trj_z(i) = acc_z_norm*timeline(i)^2*0.5;
+        vel_z(i) = acc_z_norm*timeline(i);
+        acc_z(i) = acc_z_norm;
+    end
+    
+    if (timeline(i) < t2 && timeline(i) >= t1)
+        trj_z(i) = vel_z_norm*(timeline(i) - t1) + t1^2*acc_z_norm*0.5;
+        vel_z(i) = vel_z_norm;
+        acc_z(i) = 0;
+    end
+    
+    if timeline(i) >= t2
+        trj_z(i) = acc_z_norm*0.5*(timeline(i) - t2)^2 + vel_z_norm*(t2 - t1) + t1^2*acc_z_norm*0.5;
+        vel_z(i) = vel_z_norm - acc_z_norm*(timeline(i) - t2); 
+        acc_z(i) = -acc_z_norm;
+    end
+    
+end
+
+figure(20)
+plot(timeline, acc_x); xlabel('time, s'); ylabel('acceleration, rad/s^2');
+hold on
+plot(timeline, acc_y)
+plot(timeline, acc_z)
+legend('acc_x', 'acc_y', 'acc_z')
+hold off
+
+
+figure(21)
+plot(timeline, vel_x); xlabel('time, s'); ylabel('velocity, rad/s');
+hold on
+plot(timeline, vel_y)
+plot(timeline, vel_z)
+legend('vel_x', 'vel_y', 'vel_z')
+hold off
+
+figure(22)
+plot(timeline, trj_x); xlabel('time, s'); ylabel('joints positions, rad');
+hold on
+plot(timeline, trj_y)
+plot(timeline, trj_z)
+legend('q1', 'q2', 'q3')
+hold off
+
+% commented so that not mess me
+% figure(111)
+%  
+% plot(timeline_q1, positions_q1, 'r'); xlabel('time, s'); ylabel('position and velocity values');
+% hold on
+% plot(timeline_q1, velocities_q1, 'g');
+% legend('q_1 pos, deg', 'q_1 vel, deg/s')
+% hold off
+% 
+% figure(112)
+% plot(timeline_q1, velocities_q1, 'g'); xlabel('time, s'); ylabel('velocity and acceleration values');
+% hold on
+% plot(timeline_q1, accelerations_q1, 'b');
+% legend('q_1 vel, deg/s', 'q_1 acc, deg/s^2')
+% hold off
+
+
+
+%% Command 3 - LIN
+point1 = [0, 0, 0];
+point2 = [sqrt(1/2), sqrt(1/2), 1.2];
+
+fq = 10; v = 1; a = 10;
+% 1: know the longest trapezoidal profile
+trpz_x = TRPZ_LIN(point1(1), point2(1), v/sqrt(3), a/sqrt(3), fq);
+trpz_y = TRPZ_LIN(point1(2), point2(2), v/sqrt(3), a/sqrt(3), fq);
+trpz_z = TRPZ_LIN(point1(3), point2(3), v/sqrt(3), a/sqrt(3), fq);
+
+max_time = max(trpz_x(4), max(trpz_y(4), trpz_z(4)))
+timeline = (0:1/fq:max_time);
+t1 = max(trpz_x(2), max(trpz_y(2), trpz_z(2)));
+t2 = max_time - t1;
+% build trapezoidal profiles with given time
+vel_x_norm = abs(point1(1) - point2(1))/(max_time - t1);
+vel_y_norm = abs(point1(2) - point2(2))/(max_time - t1);
+vel_z_norm = abs(point1(3) - point2(3))/(max_time - t1);
+acc_x_norm = vel_x_norm/t1;
+acc_y_norm = vel_y_norm/t1;
+acc_z_norm = vel_z_norm/t1;
+
+trj_x = zeros(size(timeline));
+vel_x = zeros(size(timeline));
+acc_x = zeros(size(timeline));
+trj_y = zeros(size(timeline));
+vel_y = zeros(size(timeline));
+acc_y = zeros(size(timeline));
+trj_z = zeros(size(timeline));
+vel_z = zeros(size(timeline));
+acc_z = zeros(size(timeline));
+
+for i = (1:1:size(timeline, 2))
+    if timeline(i) < t1
+        trj_x(i) = acc_x_norm*timeline(i)^2*0.5;
+        vel_x(i) = acc_x_norm*timeline(i);
+        acc_x(i) = acc_x_norm;
+    end
+    
+    if (timeline(i) < t2 && timeline(i) >= t1)
+        trj_x(i) = vel_x_norm*(timeline(i) - t1) + t1^2*acc_x_norm*0.5;
+        vel_x(i) = vel_x_norm;
+        acc_x(i) = 0;
+    end
+    
+    if timeline(i) >= t2
+        trj_x(i) = acc_x_norm*0.5*(timeline(i) - t2)^2 + vel_x_norm*(t2 - t1) + t1^2*acc_x_norm*0.5;
+        vel_x(i) = vel_x_norm -acc_x_norm*(timeline(i) - t2); 
+        acc_x(i) = -acc_x_norm;
+    end
+
+    
+    if timeline(i) < t1
+        trj_y(i) = acc_y_norm*timeline(i)^2*0.5;
+        vel_y(i) = acc_y_norm*timeline(i);
+        acc_y(i) = acc_y_norm;
+    end
+   
+    if (timeline(i) < t2 && timeline(i) >= t1)
+        trj_y(i) = vel_y_norm*(timeline(i) - t1) + t1^2*acc_y_norm*0.5;
+        vel_y(i) = vel_y_norm;
+        acc_y(i) = 0;
+    end
+    
+    if timeline(i) >= t2
+        trj_y(i) = acc_y_norm*0.5*(timeline(i) - t2)^2 + vel_y_norm*(t2 - t1) + t1^2*acc_y_norm*0.5;
+        vel_y(i) = vel_y_norm - acc_y_norm*(timeline(i) - t2); 
+        acc_y(i) = -acc_y_norm;
+    end
+    
+    if timeline(i) < t1
+        trj_z(i) = acc_z_norm*timeline(i)^2*0.5;
+        vel_z(i) = acc_z_norm*timeline(i);
+        acc_z(i) = acc_z_norm;
+    end
+    
+    if (timeline(i) < t2 && timeline(i) >= t1)
+        trj_z(i) = vel_z_norm*(timeline(i) - t1) + t1^2*acc_z_norm*0.5;
+        vel_z(i) = vel_z_norm;
+        acc_z(i) = 0;
+    end
+    
+    if timeline(i) >= t2
+        trj_z(i) = acc_z_norm*0.5*(timeline(i) - t2)^2 + vel_z_norm*(t2 - t1) + t1^2*acc_z_norm*0.5;
+        vel_z(i) = vel_z_norm - acc_z_norm*(timeline(i) - t2); 
+        acc_z(i) = -acc_z_norm;
+    end
+    
+end
+
+q1 = zeros(size(timeline));
+q2 = zeros(size(timeline));
+q3 = zeros(size(timeline));
+w1 = zeros(size(timeline));
+w2 = zeros(size(timeline));
+w3 = zeros(size(timeline));
+for i = (1:1:size(timeline, 2))
+    i_k = IK(trj_x(i), trj_y(i), trj_z(i));
+    q1(i) = i_k(1);
+    q2(i) = i_k(2);
+    q3(i) = i_k(3);
+%     vels = inv(JQ(q1, q2, q3)).*[trj_x(i), trj_y(i), trj_z(i)]
+%     w1(i)
+%     w2(i)
+%     w3(i)
+end
+
+figure(30)
+plot3(trj_x, trj_y, trj_z); xlabel('x'); ylabel('y'); zlabel('z');
+
+
+figure(31)
+plot(timeline, vel_x); xlabel('time, s'); ylabel('velocity, m/s');
+hold on
+plot(timeline, vel_y)
+plot(timeline, vel_z)
+legend('vel_x', 'vel_y', 'vel_z')
+hold off
+
+figure(32)
+plot(timeline, q1); xlabel('time, s'); ylabel('joints positions, rad');
+hold on
+plot(timeline, q2)
+plot(timeline, q3)
+legend('q1', 'q2', 'q3')
+hold off
+
+%% functions defenitions
+function trpz_profile_lin = TRPZ_LIN(x0, xf, v_max, a_max, freq)
+T = 1/freq;
+s = floor(abs(xf - x0)/(T*v_max));
+n = ceil(abs(xf - x0)/(T^2 * a_max * s));
+
+while n > s 
+    s = s + 1;
+    n = ceil(abs(xf - x0)/(T^2 * a_max * s));
+end
+
+t0 = 0;
+t1 = T*n;
+t2 = T*(s - n);
+tf = t1 + t2;
+a = abs(xf - x0)/(T^2*s*n);
+v = a*n*T;
+
+trpz_profile_lin = [t0, t1, t2, tf, a, v];
+end
+
+% generates trapezioidal profile for known desired angles of joints
+function trpz_profile_angle = TRPZ_ANG(q0, qf, dq_max, ddq_max, freq)
+T = 1/freq;
+s =  floor(abs(qf - q0)/(T*dq_max));
+n = ceil(abs(qf - q0)/(T^2 * ddq_max * s));
+
+
+while n > s 
+    s = s + 1;
+    n = ceil(abs(qf - q0)/(T^2 * ddq_max * s));
+end
+
+t0 = 0;
+t1 = T*n;
+t2 = T*(s - n);
+tf = t2 + t1;
+e = abs(q0 - qf)/(T^2*s*n);
+om = e*n/freq;
+trpz_profile_angle = [t0, t1, t2, tf, e, om];
+end
+
+function fk = FK(q1, q2, q3)
 %% Forward kinematics
 
-T = RTmatrices.Tz(l1)*RTmatrices.Rz(q1)*RTmatrices.Rx(q2)*RTmatrices.Tx(l2)*RTmatrices.Rx(q3)*RTmatrices.Tx(l3)
-T = simplify(T)
+T = RT.Tz(1)*RT.Rz(q1)*RT.Ry(q2)*RT.Tx(1)*RT.Ry(q3)*RT.Tx(1);
+T = simplify(T);
+fk = T;
+end
 
-%% Numerical derivatives
+function ik = IK(x, y, z)
+q1 = atan2(x, y);
+
+dl1 = x^2 + y^2;
+cq3 = (dl1 + (z - 1)^2 - 2)/2;
+sq3 = sqrt(1 - cq3^2);
+q3 = atan2(sq3, cq3); 
+
+q2 = asin((dl1 + (z - 1)^2)/(2*sqrt(dl1 + (z - 1)^2)));
+q2 = q2 - atan2(sqrt(dl1), z - 1);
+
+
+ik = [q1, q2, q3];
+end
+
+function jq = JQ(q1, q2, q3)
+T = FK(q1, q2, q3)
+
+%% Jacobian - Numerical Method
 T0 = T;
 T0 = inv(T0(1:3,1:3));
 T0=[T0,zeros(3,1);0 0 0 1];
 
-Td = RTmatrices.Tz(l1)*RTmatrices.Rzd(q1)*RTmatrices.Rx(q2)*RTmatrices.Tx(l2)*RTmatrices.Rx(q3)*RTmatrices.Tx(l3)*T0; J1 = RTmatrices.Jcol(Td);
-Td = RTmatrices.Tz(l1)*RTmatrices.Rz(q1)*RTmatrices.Rxd(q2)*RTmatrices.Tx(l2)*RTmatrices.Rx(q3)*RTmatrices.Tx(l3)*T0; J2 = RTmatrices.Jcol(Td);
-Td = RTmatrices.Tz(l1)*RTmatrices.Rz(q1)*RTmatrices.Rx(q2)*RTmatrices.Tx(l2)*RTmatrices.Rxd(q3)*RTmatrices.Tx(l3)*T0; J3 = RTmatrices.Jcol(Td);
-
-Jq1 = [simplify(J1), simplify(J2), simplify(J3)]
-
-%% Skew theory
- 
-
-% Get Z from tf
+Td = RT.Tz(1)*RT.Rzd(q1)*RT.Ry(q2)*RT.Tx(1)*RT.Ry(q3)*RT.Tx(1)*T0; J1 = RT.Jcol(Td);
+J1 = simplify(J1);
+Td = RT.Tz(1)*RT.Rz(q1)*RT.Ryd(q2)*RT.Tx(1)*RT.Ry(q3)*RT.Tx(1)*T0; J2 = RT.Jcol(Td);
+J2 = simplify(J2);
+Td = RT.Tz(1)*RT.Rz(q1)*RT.Ry(q2)*RT.Tx(1)*RT.Ryd(q3)*RT.Tx(1)*T0; J3 = RT.Jcol(Td);
+J3 = simplify(J3);
 
 
+jq = [J1, J2, J3];
 
-% Full Jacobian
-
+end
